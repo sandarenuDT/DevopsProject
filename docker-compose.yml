@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8060:8060"
+    env_file: .env
+    environment:
+      - DB_HOST=mongodb_server
+      - DB_PORT=${MONGODB_DOCKER_PORT}
+      - MONGODB_URL=${MONGODB_URL}
+    depends_on:
+      - mongodb
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # MongoDB service
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_server
+    env_file: .env
+    ports:
+      - "${MONGODB_DOCKER_PORT}:${MONGODB_DOCKER_PORT}"
+    volumes:
+      - mongo-data:/data/db
+    
+volumes:
+  mongo-data:
