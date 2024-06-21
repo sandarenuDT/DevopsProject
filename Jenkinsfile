@@ -1,39 +1,63 @@
-
 pipeline {
-    agent any 
-    
-    stages { 
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('DevopsProject') // Jenkins credentials ID
+        FRONTEND_IMAGE = 'sandarenuDT/frontend'
+        BACKEND_IMAGE = 'sandarenuDT/backend'
+        FRONTEND_TAG = 'latest' // Use appropriate tags if needed
+        BACKEND_TAG = 'latest' // Use appropriate tags if needed
+    }
+    stages {
         stage('SCM Checkout') {
             steps {
-                retry(3) {
-                    git branch: 'main', url: 'https://github.com/sandarenuDT/DevopsProject.git'
+                git url: 'https://github.com/sandarenuDT/DevopsProject.git', branch: 'main'
+            }
+        }
+        stage('Build Frontend Docker Image') {
+            steps {
+                script {
+                    // Building frontend Docker image
+                    bat 'docker build -t ${FRONTEND_IMAGE}:${FRONTEND_TAG} -f frontend/Dockerfile frontend'
                 }
             }
         }
-        stage('Build Docker Image') {
-            steps {  
-                bat 'docker build -t sandarenudt/devopsproject:%BUILD_NUMBER% .'
+        stage('Build Backend Docker Image') {
+            steps {
+                script {
+                    // Building backend Docker image
+                    bat 'docker build -t ${BACKEND_IMAGE}:${BACKEND_TAG} -f backend/Dockerfile backend'
+                }
             }
         }
         stage('Login to Docker Hub') {
             steps {
-       
-                 withCredentials([string(credentialsId: 'DevopsProject', variable: 'DevopsProject')]) {
-                    script {
-                        bat "docker login -u sandarenudt -p %DevopsProject%"
+                script {
+                    withCredentials([string(credentialsId: 'DevopsProject', variable: 'DOCKERHUB_PASSWORD')]) {
+                        bat 'echo %DOCKERHUB_PASSWORD% | docker login -u sandarenuDT --password-stdin'
                     }
                 }
             }
         }
-        stage('Push Image') {
+        stage('Push Frontend Image') {
             steps {
-                bat 'docker push sandarenudt/devopsproject:%BUILD_NUMBER%'
+                script {
+                    bat 'docker push ${FRONTEND_IMAGE}:${FRONTEND_TAG}'
+                }
+            }
+        }
+        stage('Push Backend Image') {
+            steps {
+                script {
+                    bat 'docker push ${BACKEND_IMAGE}:${BACKEND_TAG}'
+                }
             }
         }
     }
     post {
         always {
-            bat 'docker logout'
+            script {
+                bat 'docker logout'
+            }
         }
     }
 }
