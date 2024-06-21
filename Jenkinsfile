@@ -32,8 +32,8 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'DevopsProject', variable: 'DOCKERHUB_PASSWORD')]) {
-                        bat 'echo %DOCKERHUB_PASSWORD% | docker login -u sandarenuDT --password-stdin'
+                    withCredentials([string(credentialsId: 'DevopsProject', variable: 'DevopsProject')]) {
+                        bat 'echo %DOCKERHUB_PASSWORD% | docker login -u sandarenudt --password-stdin'
                     }
                 }
             }
